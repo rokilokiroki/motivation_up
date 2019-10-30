@@ -1,0 +1,72 @@
+version: '3'
+
+networks:
+  web:
+    driver: bridge
+  db:
+    driver: bridge
+  mail:
+    driver: bridge
+
+volumes:
+  db_data:
+    driver: local
+
+services:
+  http:
+    image: test_nginx
+    build: ./http
+    container_name: http_test
+    volumes:
+      - "./src/:/var/www/test/"
+    ports:
+      - "8000:80"
+    networks:
+      - web
+
+  php:
+    image: test_php
+    build: ./php
+    container_name: php_test
+    volumes:
+      - "./src/:/var/www/test/"
+    networks:
+      - web
+      - db
+      - mail
+
+  db:
+    image: test_db
+    build: ./db
+    networks:
+      - db
+    volumes:
+      - db_data:/var/lib/mysql
+    container_name: db_test
+
+  db_on_memory:
+    image: test_db_on_memory
+    build: ./db
+    networks:
+      - db
+    tmpfs:
+      - /var/lib/mysql
+    container_name: db_on_memory_test
+
+  phpmyadmin:
+    image: test_phpmyadmin
+    build: ./phpmyadmin
+    networks:
+      - db
+    ports:
+      - "8888:80"
+
+  mail:
+    image: schickling/mailcatcher
+    container_name: mail_test
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+    networks:
+      - mail
+
